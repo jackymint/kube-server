@@ -1,16 +1,16 @@
 class KubeServer < Formula
   desc "Lightweight Kubernetes cluster manager for macOS"
   homepage "https://github.com/jackymint/kube-server"
-  version "0.1.1"
+  version "0.1.3"
 
   on_arm do
     url "https://github.com/jackymint/kube-server/releases/download/v#{version}/kube-server-darwin-arm64.tar.gz"
-    sha256 "2b8eb7a7eec8eeba188dc9e53034a623c159db8af60ec53aba6d662092eeb8d8"
+    sha256 "8ce5c0e39ad120f9313110a7fef3f1ec87e866e30623cc1232275d6d27a9b191"
   end
 
   on_intel do
     url "https://github.com/jackymint/kube-server/releases/download/v#{version}/kube-server-darwin-amd64.tar.gz"
-    sha256 "ccfd59798a12bb4c837f29ba2dc62e782c181b36cbb0b3dc6d3fff5975092b93"
+    sha256 "2a2b536b7d15e8e1f6c7121213bcd22d3857199e733f3648d48b12f011d8c480"
   end
 
   depends_on :macos => :ventura
