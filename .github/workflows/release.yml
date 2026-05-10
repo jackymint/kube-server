@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Build binaries
+        run: |
+          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o dist/kube-server-darwin-arm64 .
+          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o dist/kube-server-darwin-amd64 .
+
+      - name: Create tarballs & checksums
+        run: |
+          cd dist
+          tar czf kube-server-darwin-arm64.tar.gz kube-server-darwin-arm64
+          tar czf kube-server-darwin-amd64.tar.gz kube-server-darwin-amd64
+          shasum -a 256 kube-server-darwin-arm64.tar.gz kube-server-darwin-amd64.tar.gz > checksums.txt
+          cat checksums.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/kube-server-darwin-arm64.tar.gz
+            dist/kube-server-darwin-amd64.tar.gz
+            dist/checksums.txt
+          generate_release_notes: true

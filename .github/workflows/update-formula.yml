@@ -1,0 +1,39 @@
+name: Update Homebrew Formula
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  update-formula:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Get checksums
+        id: checksums
+        run: |
+          curl -sL https://github.com/jackymint/kube-server/releases/download/${{ github.ref_name }}/checksums.txt -o checksums.txt
+          echo "arm64=$(grep arm64 checksums.txt | awk '{print $1}')" >> $GITHUB_OUTPUT
+          echo "amd64=$(grep amd64 checksums.txt | awk '{print $1}')" >> $GITHUB_OUTPUT
+
+      - name: Update formula
+        run: |
+          VERSION=${{ github.ref_name }}
+          VERSION=${VERSION#v}
+          sed -i "s/version \".*\"/version \"${VERSION}\"/" Formula/kube-server.rb
+          sed -i "s/PLACEHOLDER_ARM64_SHA256/${{ steps.checksums.outputs.arm64 }}/" Formula/kube-server.rb
+          sed -i "s/PLACEHOLDER_AMD64_SHA256/${{ steps.checksums.outputs.amd64 }}/" Formula/kube-server.rb
+
+      - name: Commit updated formula
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/kube-server.rb
+          git commit -m "chore: update formula to ${{ github.ref_name }}"
+          git push
