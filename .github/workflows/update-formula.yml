@@ -4,16 +4,15 @@ on:
   release:
     types: [published]
 
-permissions:
-  contents: write
-
 jobs:
   update-formula:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout homebrew tap
+        uses: actions/checkout@v4
         with:
-          ref: main
+          repository: jackymint/homebrew-kube-server
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
 
       - name: Get checksums
         id: checksums
@@ -27,10 +26,10 @@ jobs:
           VERSION=${{ github.ref_name }}
           VERSION=${VERSION#v}
           sed -i "s/version \".*\"/version \"${VERSION}\"/" Formula/kube-server.rb
-          sed -i "s/PLACEHOLDER_ARM64_SHA256/${{ steps.checksums.outputs.arm64 }}/" Formula/kube-server.rb
-          sed -i "s/PLACEHOLDER_AMD64_SHA256/${{ steps.checksums.outputs.amd64 }}/" Formula/kube-server.rb
+          sed -i "s/sha256 \"[a-f0-9]*\" # arm64/sha256 \"${{ steps.checksums.outputs.arm64 }}\" # arm64/" Formula/kube-server.rb
+          sed -i "s/sha256 \"[a-f0-9]*\" # amd64/sha256 \"${{ steps.checksums.outputs.amd64 }}\" # amd64/" Formula/kube-server.rb
 
-      - name: Commit updated formula
+      - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
