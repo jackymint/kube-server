@@ -1,15 +1,16 @@
 name: Update Homebrew Formula
 
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
 
 permissions:
   contents: read
 
 jobs:
   update-formula:
-    if: ${{ github.event.release.tag_name != '' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout homebrew tap
@@ -21,14 +22,14 @@ jobs:
       - name: Get checksums
         id: checksums
         run: |
-          TAG_NAME="${{ github.event.release.tag_name }}"
+          TAG_NAME="${{ github.event.workflow_run.head_branch }}"
           curl -fsSL "https://github.com/${{ github.repository }}/releases/download/${TAG_NAME}/checksums.txt" -o checksums.txt
           echo "arm64=$(grep arm64 checksums.txt | awk '{print $1}')" >> $GITHUB_OUTPUT
           echo "amd64=$(grep amd64 checksums.txt | awk '{print $1}')" >> $GITHUB_OUTPUT
 
       - name: Update formula
         env:
-          VERSION: ${{ github.event.release.tag_name }}
+          VERSION: ${{ github.event.workflow_run.head_branch }}
           ARM64_SHA: ${{ steps.checksums.outputs.arm64 }}
           AMD64_SHA: ${{ steps.checksums.outputs.amd64 }}
         run: |
@@ -50,5 +51,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Formula/kube-server.rb
           git diff --cached --quiet && exit 0
-          git commit -m "chore: update formula to ${{ github.event.release.tag_name }}"
+          git commit -m "chore: update formula to ${{ github.event.workflow_run.head_branch }}"
           git push
