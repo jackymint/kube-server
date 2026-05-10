@@ -6,18 +6,17 @@ on:
     types: [completed]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   update-formula:
     if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v') }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout homebrew tap
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          repository: jackymint/homebrew-kube-server
-          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          ref: main
 
       - name: Get checksums
         id: checksums
